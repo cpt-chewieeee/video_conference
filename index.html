@@ -20,15 +20,17 @@
     <hr>
     <div class="avatar"></div>
     <hr>
-    <div id="container"></div>
+    
     <script src="./js/mediaStreamer.js"></script>
     <script src="./node_modules/reliable-signaler/signaler.js"></script>
     <script src="./js/lib/RTCMultiConnection.js"></script>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+   
+    <script src="https://cdn.webrtc-experiment.com/MediaStreamRecorder.js"></script>
     <script>
     $('#create').click(function(){
-        console.log('creating');
+        
         var sessionid = document.getElementById('sessionid').value;
         var setting = {};
         var __setting = document.getElementById('session-settings').value;
@@ -40,7 +42,7 @@
         }
         //console.log("index: ", document.getElementById('container'))
         videoConference(setting, $('.avatar').get(0));
-        createRoom(sessionid);
+        createRoom(sessionid, 'user1');
     });
     $('#join').click(function(){
         var sessionid = document.getElementById('sessionid').value;
@@ -54,7 +56,7 @@
         }
         //console.log("index: ", document.getElementById('container'))
         videoConference(setting, $('.avatar').get(0));
-        joinRoom(sessionid);
+        joinRoom(sessionid, 'user2');
     });
 
     </script>

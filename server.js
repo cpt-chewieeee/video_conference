@@ -41,7 +41,8 @@ var app = require('http').createServer(function (request, response) {
     });
 });
 
-app.listen(1212);
+app.listen(1234);
+var parentDirectory = './uploads/';
 var currentDirectory;//where the videos for gameid is located
 var userDirectory;//where each user's video+audio is located
 var config = {
@@ -52,7 +53,7 @@ var config = {
             currentDirectory = str['gameid'];
             
             var mkdirp = require('mkdirp');
-            currentDirectory = '/tmp/videos/uploads/' + currentDirectory;
+            currentDirectory = './uploads/' + currentDirectory;
         
             mkdirp(currentDirectory, function(err){
                 if(err) console.log(err);
@@ -61,7 +62,7 @@ var config = {
        });
        socket.on('sendRecording', function(data){
             var fileName = uuid.v4();
-            //console.log(data);
+          
             writeToDisk(data.audio.dataURL, fileName + '.wav');
             writeToDisk(data.video.dataURL, fileName + '.webm');
 

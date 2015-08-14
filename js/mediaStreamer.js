@@ -1,12 +1,26 @@
 function videoConference(settingsObj, domObj){
+	if(!settingsObj) return;
+
+
+
 	var connection = new RTCMultiConnection();
-	connection.body = domObj;
 	var signaler = initReliableSignaler(connection, '/');
+	var socketio = io();
+	var multiStreamRecorder;
+	var recordingInterval = 2;
+
+
+
+
+	connection.body = domObj;
+	
 	connection.session = settingsObj;
 	connection.sdpConstraints.mandatory = {
 	    OfferToReceiveAudio: true,
 	    OfferToReceiveVideo: true
 	};
+
+
 	var videoConstraints = {
 	    mandatory: {
 	        maxWidth: 160,
@@ -17,6 +31,7 @@ function videoConference(settingsObj, domObj){
 	    },
 	    optional: []
 	};
+
 	var audioConstraints = {
 	    mandatory: {
 	        // echoCancellation: false,
@@ -29,27 +44,77 @@ function videoConference(settingsObj, domObj){
 	    },
 	    optional: []
 	};
+
 	connection.mediaConstraints = {
 	    video: videoConstraints,
 	    audio: audioConstraints
 	};
-	window.createRoom = function(sessionid){
-		connection.channel = connection.sessionid = connection.userid = sessionid;
+	
+
+
+
+	connection.onstream = function(event){
+		var videoDOM = connection.body.appendChild(event.mediaElement);
+		socketio.emit('connection',{
+	    	status: "connection established",
+			gameid: event.userid
+	    });  
+		videoDOM.addEventListener('loadedmetadata', function(){
+			
+			multiStreamRecorder = new MultiStreamRecorder(event.stream);
+			
+			multiStreamRecorder.video = videoDOM;
+			multiStreamRecorder.ondataavailable = function(blob){
+				
+				var files = {
+					audio: {
+						type: blob.audio.type || 'audio/wav',
+						dataURL: blob.audio
+					},
+					video: {
+						type: blob.video.type || 'video/webm',
+						dataURL: blob.video
+					}
+				};
+				socketio.emit('sendRecording', files);
+			};
+			multiStreamRecorder.start(recordingInterval * 1000);
+		}, false);
+		
+	};
+
+	
+	connection.onstreamended = function(event){
+		event.mediaElement.parentNode.removeChild(event.mediaElement);
+	};
+
+
+	window.createRoom = function(sessionId, userId){
+		connection.channel = sessionId;
+		connection.sessionid = sessionId;
+		connection.userid = userId;
 	    connection.open({
+	    	captureUserMediaDemand: true,
 	        onMediaCaptured: function() {
 	            signaler.createNewRoomOnServer(connection.sessionid);
 	        }
 	    });
+	   
 	}
-	window.joinRoom = function(sessionid){
-		signaler.getRoomFromServer(sessionid, function(sessionid) {
-	        connection.channel = connection.sessionid = sessionid;
+	window.joinRoom = function(sessionId, userId){
+		signaler.getRoomFromServer(sessionId, function(sessionId) {
+	        connection.channel = sessionId
+	        connection.sessionid = sessionId;
 	        connection.join({
-	            sessionid: sessionid,
-	            userid: sessionid,
+	            sessionid: sessionId,
+	            userid: userId,
 	            extra: {},
 	            session: connection.session
 	        });
+	    });
+	    socketio.emit('connection',{
+	    	status: "connection established",
+			gameid: userId
 	    });
 	}
 }
