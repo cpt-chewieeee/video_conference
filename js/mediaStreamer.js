@@ -55,6 +55,7 @@ function videoConference(settingsObj, domObj){
 
 	connection.onstream = function(event){
 		var videoDOM = connection.body.appendChild(event.mediaElement);
+		console.log("USER::", event.userid);
 		socketio.emit('connection',{
 	    	status: "connection established",
 			gameid: event.userid
@@ -111,10 +112,6 @@ function videoConference(settingsObj, domObj){
 	            extra: {},
 	            session: connection.session
 	        });
-	    });
-	    socketio.emit('connection',{
-	    	status: "connection established",
-			gameid: userId
 	    });
 	}
 }
